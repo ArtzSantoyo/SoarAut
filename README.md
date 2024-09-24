@@ -43,4 +43,5 @@ In the log analysis section for applications, add a copy of the existing configu
 Restart the Wazuh service.
 Generating Data for Testing:
 Visit the Wazuh dashboard and explore the Security Events section.
-To generate data, consider using tools like Mimikatz. Before downloading it, ensure that your browser settings allow downloads (you mentioned adjusting Chrome settings).
+To generate data, Im gonna use Mimikatz. Before downloading it, ensure that your browser settings allow downloads (go to Windows security/Virus and Threat protection/exclusions and add the downloads folder the in my browser: chrome in this case, I go to settings, privacy and security and then select no protection, so now we can download mimikatz in the downloads folder without problems).
+To download Mimikatz: (https://github.com/gentilkiwi/mimikatz/releases/tag/2.2.0-20220919)
