@@ -1,5 +1,8 @@
+Download Sysmon from Windows Official website
 Run the Windows Powershell as admin
-execute the command: cd C:\Users\Administrator\Desktop\Sysmon
+unzip the files
+Go to (https://github.com/olafhartong/sysmon-modular/blob/master/sysmonconfig.xml) and download as RAW, the copy the File to the folder where Sysmon was Unzip
+execute the command: cd C:\Users\Administrator\Desktop\Sysmon or the folder where you downloaded sysmon
 ![sysmon](https://github.com/user-attachments/assets/e4d9017d-c51d-45a6-9c9f-eabbfb358f3c)
 
 then the .\Sysmon.exe -I sysmonconfig.xml
