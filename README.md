@@ -11,7 +11,8 @@ On the DigitalOcean homepage, I will create 2 VMs for my servers: one will be Wa
 
 First lets configure the components of this SOC environment
 
-<>Cassandra Configuration:</>
+Cassandra Configuration:
+
 Edit the Cassandra configuration file (/etc/cassandra/cassandra.yaml).
 Customize the cluster name: I set it to “MyHive”).
 ![1](https://github.com/user-attachments/assets/b667fed7-93b4-432f-b91a-b0f0f508b2d7)
@@ -25,7 +26,8 @@ Change RCP Address to the VM IP and change rcp_keepalive: true
 Stop and restart the Cassandra service to apply the changes.
 ![5](https://github.com/user-attachments/assets/16ddbdf4-6a1f-43b5-8700-1a5c855640c2)
 
-<>Elasticsearch Configuration:</>
+Elasticsearch Configuration:
+
 Edit the Elasticsearch configuration file (/etc/elasticsearch/elasticsearch.yml).
 Change the cluster name to “MyHive.” and uncomment it, same with node name
 ![6](https://github.com/user-attachments/assets/0e37be44-73b1-42ec-9657-045735ace911)
@@ -40,7 +42,8 @@ Start and enable the Elasticsearch service.
 Verify its status using systemctl status elasticsearch.
 ![8](https://github.com/user-attachments/assets/811e4802-5420-4741-b812-eaf01139130b)
 
-<>TheHive Configuration:</>
+TheHive Configuration:
+
 Edit TheHive’s application configuration (/etc/thehive/application.conf).
 Update the hostname to the public IP of your TheHive VM.
 Set the cluster name to “MyHive.”
@@ -60,7 +63,8 @@ The Default credentials are: username "admin@thehive.local" password :"secret"
 ![inside the hive](https://github.com/user-attachments/assets/387a719a-a07e-4a87-8051-103fc1ec97ef)
 
 
-<>Adding Wazuh Agents:</>
+Adding Wazuh Agents:
+
 Add a new agent in Wazuh for your Windows machine with Sysmon.
 Use the Wazuh server’s public IP as the server address.
 ![addagent](https://github.com/user-attachments/assets/a32d4003-6d3f-4eaf-90e5-f7a543e746a2)
@@ -78,7 +82,8 @@ Now I go to the Wazuh Dashboard and I can see that my agent is being shown
 
 
 
-<>Configuring Sysmon Data Ingestion:</>
+Configuring Sysmon Data Ingestion:
+
 Open the Windows Event Viewer and navigate to Applications and Services Logs > Microsoft > Windows > Sysmon > Operational.
 Copy the full name of the Sysmon log.
 ![sysmonoperational](https://github.com/user-attachments/assets/7507c235-53cd-4cde-ab61-6a6c999e13a0)
@@ -90,7 +95,9 @@ In the log analysis section for applications, add a copy of the existing configu
 ![16](https://github.com/user-attachments/assets/438430f4-1669-4be4-8a2a-b5aa755014fe)
 
 Restart the Wazuh service.
-<>Generating Data for Testing:</>
+
+Generating Data for Testing:
+
 Visit the Wazuh dashboard and explore the Security Events section.
 To generate data, Im gonna use Mimikatz. Before downloading it, ensure that your browser settings allow downloads (go to Windows security/Virus and Threat protection/exclusions and add the downloads folder the in my browser: chrome in this case, I go to settings, privacy and security and then select no protection, so now we can download mimikatz in the downloads folder without problems).
 
