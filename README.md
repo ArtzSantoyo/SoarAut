@@ -113,7 +113,7 @@ So now i need to modify the ossec configuration to log everythings, but before t
 ![21](https://github.com/user-attachments/assets/a596a8f4-620c-42c6-a3f3-24cdf4c23e69)
 
 Now I want Wazuh to start to log everything, so get inside the file with nano
-And in "logall" and "logall_json" change it from "no" to "yes" and after that restart the wazuh manager and now wazuh will archive all logs in a file called "archive"
+And in "logall" and "logall_json" change it from "no" to "yes" and after that restart the wazuh manager and now wazuh will archive all logs in a file called "archive" (This way regardless of a rule being triggered or not it will be archived and therefore allows me to search for it)
 ![22](https://github.com/user-attachments/assets/7cda74ec-8681-4443-a15e-91c9097e9f1b)
 
 We can check that by going to the /var/ossec/logs/archives 
@@ -133,4 +133,6 @@ Is possible to check is there is data ingested in the archives so im gonna test 
 ![28](https://github.com/user-attachments/assets/006ad63b-3209-442d-bca7-c97603adfca1)
 
 next to go wazuh/menu/discover and select 
+
+**********
 
