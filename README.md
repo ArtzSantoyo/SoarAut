@@ -132,7 +132,116 @@ In wazuh/menu/stack management/index patterns and create a new index pattern tha
 Is possible to check is there is data ingested in the archives so im gonna test with mimikatz with: nano archives.json | grep -i mimikatz and I can see there is data, so I know data is being generated and collected by wazuh, sometimes it takes a bit of time to show off in the dashboard
 ![28](https://github.com/user-attachments/assets/006ad63b-3209-442d-bca7-c97603adfca1)
 
-next to go wazuh/menu/discover and select 
+Next, go to wazuh/menu/discover and select Wazuh-archives-* as the filter. Now we can see it on the dashboard. I will scroll down until I see OriginalFileName to craft the alert, because regardless of whether an attacker changes the name, it will still be detected.
+![aparece mimi](https://github.com/user-attachments/assets/d25e994f-358c-46d8-8503-12592ebe9ace)
+![29](https://github.com/user-attachments/assets/1092e509-fc7d-473b-9ed7-d538922d7730)
+Now, let's create a rule using the dashboard: home/management/administration/rules. Then, manage the rule files
+![30](https://github.com/user-attachments/assets/49c68721-0cf7-4538-8134-66f58b259d3d)
 
-**********
+Search for Sysmon, and below, I can see sysmon_id_01 (which means a process is being generated). Then, click the I icon; these are Sysmon rules built into Wazuh (specifically for targeting event ID 1). I copy one to use as a reference for creating a custom rule to detect Mimikatz. After that, I go to Custom Rules, click on the local rules icon to start creating a rule, paste the previous Sysmon rule, and let's start editing
+![31](https://github.com/user-attachments/assets/fdb518e4-6e58-4377-8751-2dd512c24981)
+
+First, the Rule ID should always start with 10.000. The one above is 10.001, so I cannot use that. Instead, I’ll use 10.002. For the level, I’m going to use 15 (just for fun). The field name, as mentioned before, will be OriginalFileName, and I’ll add Mimikatz. In the options, I will erase it because I want the full log. The description will be 'Alert: Mimikatz Detected', and in the ID, I’ll set it to 03 because it indicates credential dumping (which is what Mimikatz does)
+
+![32](https://github.com/user-attachments/assets/6b5a0a89-6b7a-441f-bba5-092ad352341a)
+
+Save it and wazuh is gonna need to restart
+
+Now, to test it, I’m going to change the name of mimikatz.exe to HarmlessFile and execute it. Then, I’ll check if it appears in my security events.
+
+![33](https://github.com/user-attachments/assets/7f0a00a9-f833-4820-b596-e9639de3cb7a)
+
+And there it is, with the Rule ID, description, and everything else configured as before. It’s notable that even if the image of the file changes to the original filename, it is still detected as expected
+
+![34](https://github.com/user-attachments/assets/7aea83ba-6af0-4868-be4d-4b7b2324112a)
+
+![35](https://github.com/user-attachments/assets/0df823a5-6ad0-4fc0-8c3a-e37436450929)
+
+<b> Now Integrating With Shuffle</b>
+
+Heading to the Shuffler homepage, I click on Workflows and select New Workflow, which I will call 'SOC Automation', and then create it
+
+![36](https://github.com/user-attachments/assets/6f8d0556-b1bf-4c36-b7ae-1f8563462719)
+
+Now, click on Triggers, drag a Webhook icon, and change the name to wazuh-alerts. Then, copy the webhook URI, which will be used shortly
+Next, click on the 'Change me' icon and set it to 'Repeat back to me.' Then, in the call section, click the plus icon and select 'Execute Argument
+
+Now I need to ingrate Shuffle to my Wazuh Manager by adding and integration tag in the ossec file, therefore I need to to go the ossec.conf file
+and add an integration tag(source:https://wazuh.com/blog/integrating-wazuh-with-shuffle/)this way wazuh knows that i wanna connect to shuffle, that will be the next:
+
+Name the Shuffler, and for the hook URL, use the URL from the webhook URI. Set the Rule ID to match the same ID for Mimikatz in Wazuh. Then, save it and restart the Wazuh manager. After that, check the manager status
+
+![37](https://github.com/user-attachments/assets/2f23797a-0e05-4e5a-855f-d2190ba98ccf)
+![38](https://github.com/user-attachments/assets/5d17fd64-6c1a-4e79-871e-871fed2ab6ed)
+
+Click on Run inside the Shuffler webhook, and then run Mimikatz. The argument will be executed And the Results of the run are:
+![39](https://github.com/user-attachments/assets/9aeab9b8-2a90-443d-98a5-b583a1b1c36f)
+
+<b>Add more Functions</b>
+
+As implemented, Shuffler will receive the alerts. The next step will be to create a more complete workflow:
+
+Mimikatz alert sent to Shuffler.
+Shuffler receives the Mimikatz alert by extracting the SHA256 hash from the file.
+Check that hash with VirusTotal.
+Send details to TheHive to create an alert.
+Send an email to the SOC analyst to begin the investigation.
+Therefore, I go to the ChangeMe icon and modify its action to 'Regex.' I will set the action to 'Regex Capture Group,' and the input data will be 'Hashes.' Now, at the bottom, it needs a regex pattern. To make things easy, I’ll copy the hashes from the previous execution and ask ChatGPT to parse a SHA256 value for those hashes.
+![40](https://github.com/user-attachments/assets/f3bd0404-00ea-4fbf-bd07-bfbe552d8d6d)
+Now I rerun the workflow in Shuffler, and I can see that it’s correctly providing the SHA256 hash
+![41](https://github.com/user-attachments/assets/9eb291a1-9d81-4c5d-9abe-e03306cd137f)
+
+Next, I modify 'Change Me' to 'SHA256_Regex.' The next step is to use VirusTotal with its API, so I go to VirusTotal and copy my account API key. In Shuffler, I search for the VirusTotal app for my workflow, add it to SHA256_Regex, and then set it up. I find the action to Get a Hash Report and set the ID to SHA256_Regex to group the list, then rerun the workflow.
+
+In the results from VirusTotal, scrolling down to Last_analysis_stats, I can see that 67 scanners detected this file as malicious
+![42](https://github.com/user-attachments/assets/d1c0cf1e-24cb-44d0-bf3a-993380b4ca50)
+![43](https://github.com/user-attachments/assets/cbbad875-705d-4c06-a9c2-93f6515b4621)
+![44](https://github.com/user-attachments/assets/ac7c7ac2-d2ef-49f6-8377-fe46a0ff38df)
+
+Lets add TheHive to this workflow, look for in shuffle apps and drag it to the workflow
+![45](https://github.com/user-attachments/assets/557d7000-da67-4649-8d8e-3ccd342d1bde)
+
+Now is time to go back to TheHive Dashboard, Log in and create a new organization, the new organization has no users to lets create them
+![46](https://github.com/user-attachments/assets/9acd81e5-8b91-48d1-a003-4b883d6ea0ce)
+
+"The first account is a normal analyst profile, and the second one will be a service type, also with an analyst profile. After creating both accounts, I set a password, and for the SOAR or service account, I generate an API key to authenticate with Shuffler. Then, I log out and log in with one of my analyst accounts, and now the dashboard looks different. Next, I go back to Shuffler and authenticate TheHive using the API and the IP address of TheHive VM
+
+![46](https://github.com/user-attachments/assets/c06e031f-69ee-491d-97f5-898626c371f5)
+![47](https://github.com/user-attachments/assets/d9d573c9-2f9a-4456-a3f9-cb88e02f7f1f)
+![48](https://github.com/user-attachments/assets/120dd8e2-4c3c-45c6-862e-9be4f7272130)
+
+After that, I select my Hive app in the workflow and edit it. find the action to create an alert and customize the body of the alert to my liking. For the URL, I use the IP address of my TheHive VM on port 9000. Therefore I need to modify my firewall to allow inbound traffic on port 9000, as this is where the TheHive instance will run, and I need to test this automation. So, I head to the firewall and create a custom rule to allow all TCP IPv4 traffic on port 9000
+
+![49](https://github.com/user-attachments/assets/8f2a8dca-ef8d-4b7a-9e65-6acb4af6730c)
+
+![50](https://github.com/user-attachments/assets/22f4fce5-2a83-445e-890b-bff86971c9ec)
+Then Re-run the workflow in shuffle and I can see TheHive executing properly and generating alerts on the dashboard
+
+![51](https://github.com/user-attachments/assets/c1d1c7d0-7101-4f32-8dd6-6970625bf21a)
+
+![52](https://github.com/user-attachments/assets/6239ad02-c78a-4835-80a2-27fc677bd812)
+![53](https://github.com/user-attachments/assets/e7284114-160e-48d4-a92b-19053fe51a9f)
+
+<b> Sending Reports to the Analyst</b>
+
+Now, I drag the email app into the workflow and connect it to VirusTotal. To customize the email, I set the recipients' addresses, the subject, and the body of the email, then run the workflow. I receive the notification at the provided email
+
+![54](https://github.com/user-attachments/assets/c0235ef8-7d01-49a9-90e4-b0f1316ea0f5)
+
+![55](https://github.com/user-attachments/assets/f9f96187-3984-4d26-8aee-77ed7dcd5b56)
+
+Now with everything set up lets review the workflow on shuffler
+
+![first part workflow](https://github.com/user-attachments/assets/4ce57e75-c7ed-45ad-a935-862ac489283f)
+
+In the next Part, I will Set up this configuration to Apply Responses from the Analyst.
+
+
+
+
+
+
+
+
+
 
